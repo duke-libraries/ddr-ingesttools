@@ -1,1 +1,1 @@
-Ruby tools supporting ingest into the Duke Digital Repository.
+Ruby tools supporting the preparation of ingest packages for the Duke Digital Repository.
