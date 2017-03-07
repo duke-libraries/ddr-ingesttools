@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Jim Coble"]
   spec.email         = ["jim.coble@duke.edu"]
   spec.summary       = "Ruby tools supporting ingest into the Duke Digital Repository."
-  spec.description   = "Ruby tools supporting ingest into the Duke Digital Repository."
+  spec.description   = "A collection of Ruby tools supporting ingest into the Duke Digital Repository."
   spec.homepage      = "https://github.com/duke-libraries/ddr-ingesttools"
   spec.license       = "BSD-3-Clause"
 
@@ -18,7 +18,9 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "bagit", "~> 0.4"
+
   spec.add_development_dependency "bundler", "~> 1.14"
-  spec.add_development_dependency "rake"
+  spec.add_development_dependency "rake", "~> 12.0"
   spec.add_development_dependency "rspec", "~> 3.0"
 end
