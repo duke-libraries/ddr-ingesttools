@@ -4,7 +4,30 @@ module Ddr::IngestTools::DpcFolderConverter
 
     let(:source_directory) { Dir.mktmpdir('dpc') }
     let(:target_directory) { Dir.mktmpdir('sif') }
+    let(:data_directory) { File.join(target_directory, 'data') }
     let(:item_id_length) { 6 }
+    let(:expected_files) { [
+        target_directory,
+        File.join(target_directory, 'bag-info.txt'),
+        File.join(target_directory, 'bagit.txt'),
+        data_directory,
+        File.join(data_directory, 'abc001'),
+        File.join(data_directory, 'abc001', 'abc001001.tif'),
+        File.join(data_directory, 'abc001', 'abc001002.tif'),
+        File.join(data_directory, 'abc002'),
+        File.join(data_directory, 'abc002', 'abc002001.tif'),
+        File.join(data_directory, 'abc003', 'abc003001.wav'),
+        File.join(data_directory, 'abc003'),
+        File.join(data_directory, 'abc003', 'abc003002.wav'),
+        File.join(data_directory, 'dpc_targets'),
+        File.join(data_directory, 'dpc_targets', 'T001.tif'),
+        File.join(data_directory, 'dpc_targets', 'T002.tif'),
+        File.join(data_directory, 'metadata.txt'),
+        File.join(target_directory, 'manifest-md5.txt'),
+        File.join(target_directory, 'manifest-sha1.txt'),
+        File.join(target_directory, 'tagmanifest-md5.txt'),
+        File.join(target_directory, 'tagmanifest-sha1.txt')
+    ] }
     let(:expected_metadata) { [
         "path\tlocal_id",
         "abc001\tabc001",
@@ -37,27 +60,27 @@ module Ddr::IngestTools::DpcFolderConverter
 
     it 'produces the correct standard ingest format directory' do
       subject.call
-      expect(Dir.entries(target_directory)).to match_array([ '.', '..', 'abc001', 'abc002', 'abc003', 'dpc_targets', 'metadata.txt' ])
-      expect(Dir.entries(File.join(target_directory, 'abc001'))).to match_array([ '.', '..', 'abc001001.tif', 'abc001002.tif' ])
-      expect(Dir.entries(File.join(target_directory, 'abc002'))).to match_array([ '.', '..', 'abc002001.tif' ])
-      expect(Dir.entries(File.join(target_directory, 'abc003'))).to match_array([ '.', '..', 'abc003001.wav', 'abc003002.wav' ])
-      expect(Dir.entries(File.join(target_directory, 'dpc_targets'))).to match_array([ '.', '..', 'T001.tif', 'T002.tif' ])
-      expect(FileUtils.compare_file(File.join(target_directory, 'abc001', 'abc001001.tif'),
+      expect(Array(Find.find(target_directory))).to match_array(expected_files)
+      expect(FileUtils.compare_file(File.join(data_directory, 'abc001', 'abc001001.tif'),
                                     File.join(source_directory, 'abc001001.tif'))).to be true
-      expect(FileUtils.compare_file(File.join(target_directory, 'abc001', 'abc001002.tif'),
+      expect(FileUtils.compare_file(File.join(data_directory, 'abc001', 'abc001002.tif'),
                                     File.join(source_directory, 'abc001002.tif'))).to be true
-      expect(FileUtils.compare_file(File.join(target_directory, 'abc002', 'abc002001.tif'),
+      expect(FileUtils.compare_file(File.join(data_directory, 'abc002', 'abc002001.tif'),
                                     File.join(source_directory, 'abc002001.tif'))).to be true
-      expect(FileUtils.compare_file(File.join(target_directory, 'abc003', 'abc003001.wav'),
+      expect(FileUtils.compare_file(File.join(data_directory, 'abc003', 'abc003001.wav'),
                                     File.join(source_directory, 'g', 'abc003001.wav'))).to be true
-      expect(FileUtils.compare_file(File.join(target_directory, 'abc003', 'abc003002.wav'),
+      expect(FileUtils.compare_file(File.join(data_directory, 'abc003', 'abc003002.wav'),
                                     File.join(source_directory, 'g', 'abc003002.wav'))).to be true
-      expect(FileUtils.compare_file(File.join(target_directory, 'dpc_targets', 'T001.tif'),
+      expect(FileUtils.compare_file(File.join(data_directory, 'dpc_targets', 'T001.tif'),
                                     File.join(source_directory, 'targets', 'T001.tif'))).to be true
-      expect(FileUtils.compare_file(File.join(target_directory, 'dpc_targets', 'T002.tif'),
+      expect(FileUtils.compare_file(File.join(data_directory, 'dpc_targets', 'T002.tif'),
                                     File.join(source_directory, 'targets', 'T002.tif'))).to be true
-      metadata_lines = File.readlines(File.join(target_directory, 'metadata.txt')).map(&:strip)
+      metadata_lines = File.readlines(File.join(data_directory, 'metadata.txt')).map(&:strip)
       expect(metadata_lines).to match_array(expected_metadata)
+      # expect(FileUtils.compare_file(File.join(target_directory, 'manifest-sha1.txt'),
+      #                               File.join(File.dirname(__FILE__), '..', 'fixtures', 'files', 'manifest-sha1.txt'))).to be true
+      expect(FileUtils.compare_file(File.join(target_directory, 'manifest-sha1.txt'),
+                                    File.join('spec', 'fixtures', 'files', 'manifest-sha1.txt'))).to be true
     end
 
   end
