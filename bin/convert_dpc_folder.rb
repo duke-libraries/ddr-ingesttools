@@ -3,8 +3,12 @@
 require 'ddr/ingesttools'
 require 'optparse'
 
-# Parse command line arguments
 options = {}
+
+# Default options
+options[:copy] = false
+
+# Parse command line arguments
 parser = OptionParser.new do |opts|
   opts.banner = 'Usage: convert_dpc_folder.rb [options]'
 
@@ -19,6 +23,10 @@ parser = OptionParser.new do |opts|
   opts.on('-i', '--item_id_length LENGTH', Integer, 'Number of characters to copy from the beginning of each file name',
           'to use as the local ID of the item of which that file is a component') do |v|
     options[:item_id_length] = v
+  end
+
+  opts.on('--[no-]copy', 'Copy files to target location instead of using a symlink') do |v|
+    options[:copy] = v
   end
 end
 
@@ -35,6 +43,6 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument
   exit(false)
 end
 
-converter_args = [ options[:source], options[:target], options[:item_id_length] ]
+converter_args = [ options[:source], options[:target], options[:item_id_length], options[:copy] ]
 converter = Ddr::IngestTools::DpcFolderConverter::Converter.new(*converter_args)
 converter.call
