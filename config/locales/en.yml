@@ -1,0 +1,7 @@
+en:
+  errors:
+    count: "%{count} error(s)"
+    checksum_mismatch: |
+      ***** Checksum mismatch:
+              %{c1} %{f1}
+              %{c2} %{f2}
