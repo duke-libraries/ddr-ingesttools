@@ -25,6 +25,10 @@ parser = OptionParser.new do |opts|
     options[:item_id_length] = v
   end
 
+  opts.on('-c', '--checksums [CHECKSUM_FILE]', 'External checksum file') do |v|
+    options[:checksums] = v
+  end
+
   opts.on('--[no-]copy', 'Copy files to target location instead of using a symlink') do |v|
     options[:copy] = v
   end
@@ -43,6 +47,8 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument
   exit(false)
 end
 
-converter_args = [ options[:source], options[:target], options[:item_id_length], options[:copy] ]
+converter_args = [ options[:source], options[:target], options[:item_id_length], options[:checksums], options[:copy] ]
 converter = Ddr::IngestTools::DpcFolderConverter::Converter.new(*converter_args)
-converter.call
+results = converter.call
+puts I18n.translate('errors.count', { count: results.errors.size })
+results.errors.each { |e| puts e }

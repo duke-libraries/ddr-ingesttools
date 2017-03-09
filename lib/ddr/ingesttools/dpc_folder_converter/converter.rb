@@ -11,28 +11,44 @@ module Ddr::IngestTools::DpcFolderConverter
       SIF_TARGETS_DIRNAME = 'dpc_targets'
       SIF_METADATA_FILENAME = 'metadata.txt'
       SIF_METADATA_HEADERS = [ 'path', 'local_id' ]
+      SIF_MANIFEST_SHA1_FILENAME = 'manifest-sha1.txt'
 
-      attr_reader :source, :target, :data_dir, :item_id_length, :copy_files
-      attr_accessor :local_id_metadata
+      Results = Struct.new(:file_map, :errors)
 
-      def initialize(source, target, item_id_length, copy_files)
+      attr_reader :source, :target, :data_dir, :item_id_length, :checksum_file, :copy_files
+      attr_accessor :errors, :file_map, :local_id_metadata, :results
+
+      def initialize(source, target, item_id_length, checksum_file, copy_files)
         @source = source
         @target = target
-        @data_dir = File.join(target, 'data')
         @item_id_length = item_id_length
+        @checksum_file = checksum_file
         @copy_files = copy_files
-        @local_id_metadata = {}
       end
 
       def call
-        FileUtils.mkdir_p data_dir
-        find_component_files(source).each { |file| handle_component(file) }
-        find_target_files(source).each { |file| handle_target(file) }
+        setup
+        find_files
         output_metadata
         bagitup
+        validate_checksums if checksum_file
+        Results.new(file_map, errors)
       end
 
       private
+
+      def setup
+        @data_dir = File.join(target, 'data')
+        @errors = []
+        @file_map = {}
+        @local_id_metadata = {}
+        FileUtils.mkdir_p data_dir
+      end
+
+      def find_files
+        find_component_files(source).each { |file| handle_component(file) }
+        find_target_files(source).each { |file| handle_target(file) }
+      end
 
       def included_extensions
         Ddr::IngestTools::DpcFolderConverter.config[:included_extensions]
@@ -77,12 +93,13 @@ module Ddr::IngestTools::DpcFolderConverter
         local_id_metadata[File.join(SIF_TARGETS_DIRNAME, File.basename(file))] = base
       end
 
-      def handle_file(file, item_id)
+      def handle_file(file, folder_name)
         if copy_files
-          FileUtils.cp file, File.join(data_dir, item_id)
+          FileUtils.cp file, File.join(data_dir, folder_name)
         else
-          FileUtils.ln_s file, File.join(data_dir, item_id)
+          FileUtils.ln_s file, File.join(data_dir, folder_name)
         end
+        file_map[file] = File.join(data_dir, folder_name, File.basename(file))
       end
 
       def output_metadata
@@ -101,6 +118,20 @@ module Ddr::IngestTools::DpcFolderConverter
       def bagitup
         bag = BagIt::Bag.new(target)
         bag.manifest!
+      end
+
+      def validate_checksums
+        external_checksums = Ddr::IngestTools::ChecksumFile.new(checksum_file)
+        sif_manifest = Ddr::IngestTools::ChecksumFile.new(File.join(target, SIF_MANIFEST_SHA1_FILENAME))
+        file_map.each do |source_path, target_path|
+          external_checksum = external_checksums.digest(source_path)
+          manifest_path = target_path.sub("#{target}/", '')
+          sif_checksum = sif_manifest.digest(manifest_path)
+          unless external_checksum == sif_checksum
+            errors << I18n.translate('errors.checksum_mismatch', { c1: external_checksum, f1: source_path,
+                                                                   c2: sif_checksum, f2: target_path })
+          end
+        end
       end
     end
 end
