@@ -6,7 +6,9 @@ module Ddr::IngestTools::DpcFolderConverter
       subject { described_class.new(*converter_args) }
       it 'produces the correct standard ingest format directory' do
         results = subject.call
+        # Target directory contains all the expected files and only the expected files
         expect(Array(Find.find(target_directory))).to match_array(expected_files)
+        # Target content files are same as source content files
         expect(FileUtils.compare_file(File.join(data_directory, 'abc001', 'abc001001.tif'),
                                       File.join(source_directory, 'abc001001.tif'))).to be true
         expect(FileUtils.compare_file(File.join(data_directory, 'abc001', 'abc001002.tif'),
@@ -21,10 +23,17 @@ module Ddr::IngestTools::DpcFolderConverter
                                       File.join(source_directory, 'targets', 'T001.tif'))).to be true
         expect(FileUtils.compare_file(File.join(data_directory, 'dpc_targets', 'T002.tif'),
                                       File.join(source_directory, 'targets', 'T002.tif'))).to be true
+        expect(FileUtils.compare_file(File.join(data_directory, 'intermediate_files', 'abc001001.jpg'),
+                                      File.join(source_directory, 'intermediate_files', 'abc001001.jpg'))).to be true
+        expect(FileUtils.compare_file(File.join(data_directory, 'intermediate_files', 'abc002001.jpg'),
+                                      File.join(source_directory, 'intermediate_files', 'abc002001.jpg'))).to be true
+        # Generated metadata file contains the expected contents
         metadata_lines = File.readlines(File.join(data_directory, 'metadata.txt')).map(&:strip)
         expect(metadata_lines).to match_array(expected_metadata)
-        expect(FileUtils.compare_file(File.join(target_directory, 'manifest-sha1.txt'),
-                                      File.join('spec', 'fixtures', 'files', 'manifest-sha1.txt'))).to be true
+        # Generated manifest contains the expected contents (ignoring line order)
+        generated_manifest = File.readlines(File.join(File.join(target_directory, 'manifest-sha1.txt'))).sort
+        expect(generated_manifest).to match_array(expected_manifest)
+        # Conversion process produces the expected errors
         expect(results.errors).to match_array(checksum_errors)
       end
     end
@@ -52,6 +61,9 @@ module Ddr::IngestTools::DpcFolderConverter
         File.join(data_directory, 'dpc_targets'),
         File.join(data_directory, 'dpc_targets', 'T001.tif'),
         File.join(data_directory, 'dpc_targets', 'T002.tif'),
+        File.join(data_directory, 'intermediate_files'),
+        File.join(data_directory, 'intermediate_files', 'abc001001.jpg'),
+        File.join(data_directory, 'intermediate_files', 'abc002001.jpg'),
         File.join(data_directory, 'metadata.txt'),
         File.join(target_directory, 'manifest-md5.txt'),
         File.join(target_directory, 'manifest-sha1.txt'),
@@ -71,6 +83,9 @@ module Ddr::IngestTools::DpcFolderConverter
         "dpc_targets/T001.tif\tT001",
         "dpc_targets/T002.tif\tT002"
     ] }
+    let(:expected_manifest) do
+      File.readlines(File.join('spec', 'fixtures', 'files', 'manifest-sha1.txt')).sort
+    end
 
     before do
       File.open(File.join(source_directory, 'Thumbs.db'), 'w') { |f| f.write('Thumbs') }
@@ -81,7 +96,10 @@ module Ddr::IngestTools::DpcFolderConverter
       Dir.mkdir(File.join(source_directory,'g'))
       File.open(File.join(source_directory, 'g', 'abc003001.wav'), 'w') { |f| f.write('abc003001') }
       File.open(File.join(source_directory, 'g', 'abc003002.wav'), 'w') { |f| f.write('abc003002') }
-      Dir.mkdir(File.join(source_directory,'targets'))
+      Dir.mkdir(File.join(source_directory, 'intermediate_files'))
+      File.open(File.join(source_directory, 'intermediate_files', 'abc001001.jpg'), 'w') { |f| f.write('abc001001 jpg')}
+      File.open(File.join(source_directory, 'intermediate_files', 'abc002001.jpg'), 'w') { |f| f.write('abc002001 jpg')}
+      Dir.mkdir(File.join(source_directory, 'targets'))
       File.open(File.join(source_directory, 'targets', 'T001.tif'), 'w') { |f| f.write('T001') }
       File.open(File.join(source_directory, 'targets', 'T002.tif'), 'w') { |f| f.write('T002') }
     end
@@ -104,6 +122,10 @@ module Ddr::IngestTools::DpcFolderConverter
                                                          f1: File.join(source_directory, 'g/abc003001.wav'),
                                                          c2: 'c227abc095d3b758051c1c1c9e922494b6b6e0b0',
                                                          f2: File.join(target_directory, 'data/abc003/abc003001.wav') }),
+            I18n.translate('errors.checksum_mismatch', { c1: '260b3c2d20a1726de96671d29f73ba09d13b61ba',
+                                                         f1: File.join(source_directory, 'intermediate_files/abc002001.jpg'),
+                                                         c2: '260b3c2d20a7126de96671d29f73ba09d13b61ba',
+                                                         f2: File.join(target_directory, 'data/intermediate_files/abc002001.jpg') }),
             I18n.translate('errors.checksum_mismatch', { c1: 'a08c4d5a76d1b8735587be6ffcba66a9baf475c4',
                                                          f1: File.join(source_directory, 'targets/T001.tif'),
                                                          c2: 'a08c4d5a76d1b8734487be6ffcba66a9baf475c4',

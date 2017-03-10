@@ -28,7 +28,7 @@ module Ddr::IngestTools::DpcFolderConverter
 
       def call
         setup
-        find_files
+        scan_files(source)
         output_metadata
         bagitup
         validate_checksums if checksum_file
@@ -45,36 +45,28 @@ module Ddr::IngestTools::DpcFolderConverter
         FileUtils.mkdir_p data_dir
       end
 
-      def find_files
-        find_component_files(source).each { |file| handle_component(file) }
-        find_target_files(source).each { |file| handle_target(file) }
-      end
-
       def included_extensions
         Ddr::IngestTools::DpcFolderConverter.config[:included_extensions]
       end
 
-      def find_component_files(dir)
-        files = []
-        Find.find(dir) do |path|
-          Find.prune if path.include?(DPC_TARGETS_DIRNAME)
-          Find.prune if path.include?(INTERMEDIATE_FILES_DIRNAME)
-          next unless File.file?(path)
-          next unless included_extensions.include?(File.extname(path))
-          files << path
+      def scan_files(dirpath, file_handler='handle_component'.to_sym)
+        Dir.foreach(dirpath).each do |entry|
+          next if [ '.', '..' ].include?(entry)
+          path = File.join(dirpath, entry)
+          if File.directory?(path)
+            if entry == DPC_TARGETS_DIRNAME
+              scan_files(path, :handle_target)
+            elsif entry == INTERMEDIATE_FILES_DIRNAME
+              scan_files(path, :handle_intermediate_file)
+            else
+              scan_files(path, file_handler)
+            end
+          else
+            if included_extensions.include?(File.extname(entry))
+              self.send(file_handler, path)
+            end
+          end
         end
-        files
-      end
-
-      def find_target_files(dir)
-        files = []
-        Find.find(dir) do |path|
-          next unless path.include?(DPC_TARGETS_DIRNAME)
-          next unless File.file?(path)
-          next unless included_extensions.include?(File.extname(path))
-          files << path
-        end
-        files
       end
 
       def handle_component(file)
@@ -84,6 +76,11 @@ module Ddr::IngestTools::DpcFolderConverter
         local_id_metadata[item_id] = item_id
         handle_file(file, item_id)
         local_id_metadata[File.join(item_id, File.basename(file))] = base
+      end
+
+      def handle_intermediate_file(file)
+        FileUtils.mkdir_p(File.join(data_dir, INTERMEDIATE_FILES_DIRNAME))
+        handle_file(file, INTERMEDIATE_FILES_DIRNAME)
       end
 
       def handle_target(file)
