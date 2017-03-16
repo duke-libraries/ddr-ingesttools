@@ -10,20 +10,23 @@ module Ddr::IngestTools::DpcFolderConverter
       DPC_TARGETS_DIRNAME = 'targets'
       SIF_TARGETS_DIRNAME = 'dpc_targets'
       SIF_METADATA_FILENAME = 'metadata.txt'
-      SIF_METADATA_HEADERS = [ 'path', 'local_id' ]
       SIF_MANIFEST_SHA1_FILENAME = 'manifest-sha1.txt'
 
       Results = Struct.new(:file_map, :errors)
 
-      attr_reader :source, :target, :data_dir, :item_id_length, :checksum_file, :copy_files
+      attr_reader :source, :target, :data_dir, :item_id_length, :checksums, :copy_files, :collection_title,
+                  :metadata_headers
       attr_accessor :errors, :file_map, :local_id_metadata, :results
 
-      def initialize(source, target, item_id_length, checksum_file, copy_files)
+      def initialize(source:, target:, item_id_length:, checksums: nil, copy_files: false, collection_title: nil)
         @source = source
         @target = target
         @item_id_length = item_id_length
-        @checksum_file = checksum_file
+        @checksums = checksums
         @copy_files = copy_files
+        @collection_title = collection_title
+        @metadata_headers = [ 'path', 'local_id' ]
+        @metadata_headers << 'title' unless collection_title.nil?
       end
 
       def call
@@ -31,7 +34,7 @@ module Ddr::IngestTools::DpcFolderConverter
         scan_files(source)
         output_metadata
         bagitup
-        validate_checksums if checksum_file
+        validate_checksums if checksums
         Results.new(file_map, errors)
       end
 
@@ -101,13 +104,18 @@ module Ddr::IngestTools::DpcFolderConverter
 
       def output_metadata
         metadata_rows = []
+        if collection_title
+          metadata_rows << CSV::Row.new(metadata_headers, [ nil, nil, collection_title ])
+        end
         local_id_metadata.each_pair do |k,v|
-          metadata_rows << CSV::Row.new(SIF_METADATA_HEADERS, [ k, v ])
+          row_elements = [ k, v ]
+          row_elements << nil if collection_title
+          metadata_rows << CSV::Row.new(metadata_headers, row_elements)
         end
         File.open(File.join(data_dir, SIF_METADATA_FILENAME), 'w') do |file|
-          file.puts(SIF_METADATA_HEADERS.join(Ddr::IngestTools::DpcFolderConverter.config[:csv_options][:col_sep]))
+          file.puts(metadata_headers.join(Ddr::IngestTools::DpcFolderConverter.config[:csv_options][:col_sep]))
           metadata_rows.each do |row|
-            file.puts(row.to_csv(Ddr::IngestTools::DpcFolderConverter.config[:csv_options]).strip)
+            file.puts(row.to_csv(Ddr::IngestTools::DpcFolderConverter.config[:csv_options]))
           end
         end
       end
@@ -118,7 +126,7 @@ module Ddr::IngestTools::DpcFolderConverter
       end
 
       def validate_checksums
-        external_checksums = Ddr::IngestTools::ChecksumFile.new(checksum_file)
+        external_checksums = Ddr::IngestTools::ChecksumFile.new(checksums)
         sif_manifest = Ddr::IngestTools::ChecksumFile.new(File.join(target, SIF_MANIFEST_SHA1_FILENAME))
         file_map.each do |source_path, target_path|
           external_checksum = external_checksums.digest(source_path)
