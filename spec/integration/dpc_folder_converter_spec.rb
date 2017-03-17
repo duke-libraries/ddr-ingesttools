@@ -3,7 +3,7 @@ module Ddr::IngestTools::DpcFolderConverter
   RSpec.describe Converter do
 
     shared_examples 'a conversion to standard ingest format' do
-      subject { described_class.new(*converter_args) }
+      subject { described_class.new(converter_args) }
       it 'produces the correct standard ingest format directory' do
         results = subject.call
         # Target directory contains all the expected files and only the expected files
@@ -28,7 +28,7 @@ module Ddr::IngestTools::DpcFolderConverter
         expect(FileUtils.compare_file(File.join(data_directory, 'intermediate_files', 'abc002001.jpg'),
                                       File.join(source_directory, 'intermediate_files', 'abc002001.jpg'))).to be true
         # Generated metadata file contains the expected contents
-        metadata_lines = File.readlines(File.join(data_directory, 'metadata.txt')).map(&:strip)
+        metadata_lines = File.readlines(File.join(data_directory, 'metadata.txt')).map(&:chomp)
         expect(metadata_lines).to match_array(expected_metadata)
         # Generated manifest contains the expected contents (ignoring line order)
         generated_manifest = File.readlines(File.join(File.join(target_directory, 'manifest-sha1.txt'))).sort
@@ -43,8 +43,8 @@ module Ddr::IngestTools::DpcFolderConverter
     let(:data_directory) { File.join(target_directory, 'data') }
     let(:item_id_length) { 6 }
     let(:checksums_directory) { Dir.mktmpdir('checksums') }
-    let(:checksum_file) { File.join(checksums_directory, 'checksums-sha1.txt') }
-    let(:converter_args) { [ source_directory, target_directory, item_id_length ] }
+    let(:checksums) { File.join(checksums_directory, 'checksums-sha1.txt') }
+    let(:converter_args) { { source: source_directory, target: target_directory, item_id_length: item_id_length } }
     let(:expected_files) { [
         target_directory,
         File.join(target_directory, 'bag-info.txt'),
@@ -104,69 +104,94 @@ module Ddr::IngestTools::DpcFolderConverter
       File.open(File.join(source_directory, 'targets', 'T002.tif'), 'w') { |f| f.write('T002') }
     end
 
-    describe 'external checksum file' do
-      before do
-        File.open(checksum_file, 'w') do |f|
-          f << File.open(checksum_file_template).read.gsub('SOURCE_DIRECTORY', source_directory)
+    describe 'external checksum files' do
+      describe 'external checksum file' do
+        before do
+          File.open(checksums, 'w') do |f|
+            f << File.open(checksum_file_template).read.gsub('SOURCE_DIRECTORY', source_directory)
+          end
+          converter_args[:checksums] = checksums
         end
-        converter_args << checksum_file
+        describe 'mismatch' do
+          let(:checksum_file_template) { File.join('spec', 'fixtures', 'files', 'bad-checksums-sha1.txt') }
+          let(:checksum_errors) {
+            [ I18n.translate('errors.checksum_mismatch', { c1: 'd0a2f2482783ae3c83d06f3cdeaa1a306cc043ad',
+                                                           f1: File.join(source_directory, 'abc001002.tif'),
+                                                           c2: 'd0a2f2482783ae3c38d06f3cdeaa1a306cc043ad',
+                                                           f2: File.join(target_directory, 'data/abc001/abc001002.tif') }),
+              I18n.translate('errors.checksum_mismatch', { c1: 'c227abc095d3b758ab1c1c1c9e922494b6b6e0b0',
+                                                           f1: File.join(source_directory, 'g/abc003001.wav'),
+                                                           c2: 'c227abc095d3b758051c1c1c9e922494b6b6e0b0',
+                                                           f2: File.join(target_directory, 'data/abc003/abc003001.wav') }),
+              I18n.translate('errors.checksum_mismatch', { c1: '260b3c2d20a1726de96671d29f73ba09d13b61ba',
+                                                           f1: File.join(source_directory, 'intermediate_files/abc002001.jpg'),
+                                                           c2: '260b3c2d20a7126de96671d29f73ba09d13b61ba',
+                                                           f2: File.join(target_directory, 'data/intermediate_files/abc002001.jpg') }),
+              I18n.translate('errors.checksum_mismatch', { c1: 'a08c4d5a76d1b8735587be6ffcba66a9baf475c4',
+                                                           f1: File.join(source_directory, 'targets/T001.tif'),
+                                                           c2: 'a08c4d5a76d1b8734487be6ffcba66a9baf475c4',
+                                                           f2: File.join(target_directory, 'data/dpc_targets/T001.tif') })
+            ]
+          }
+          describe 'files are copied' do
+            before { converter_args[:copy_files] = true }
+            it_behaves_like 'a conversion to standard ingest format'
+          end
+          describe 'files are not copied' do
+            before { converter_args[:copy_files] = false }
+            it_behaves_like 'a conversion to standard ingest format'
+          end
+        end
+        describe 'no mismatch' do
+          let(:checksum_file_template) { File.join('spec', 'fixtures', 'files', 'good-checksums-sha1.txt') }
+          let(:checksum_errors) { [] }
+          describe 'files are copied' do
+            before { converter_args[:copy_files] = true }
+            it_behaves_like 'a conversion to standard ingest format'
+          end
+          describe 'files are not copied' do
+            before { converter_args[:copy_files] = false }
+            it_behaves_like 'a conversion to standard ingest format'
+          end
+        end
       end
-      describe 'mismatch' do
-        let(:checksum_file_template) { File.join('spec', 'fixtures', 'files', 'bad-checksums-sha1.txt') }
-        let(:checksum_errors) {
-          [ I18n.translate('errors.checksum_mismatch', { c1: 'd0a2f2482783ae3c83d06f3cdeaa1a306cc043ad',
-                                                         f1: File.join(source_directory, 'abc001002.tif'),
-                                                         c2: 'd0a2f2482783ae3c38d06f3cdeaa1a306cc043ad',
-                                                         f2: File.join(target_directory, 'data/abc001/abc001002.tif') }),
-            I18n.translate('errors.checksum_mismatch', { c1: 'c227abc095d3b758ab1c1c1c9e922494b6b6e0b0',
-                                                         f1: File.join(source_directory, 'g/abc003001.wav'),
-                                                         c2: 'c227abc095d3b758051c1c1c9e922494b6b6e0b0',
-                                                         f2: File.join(target_directory, 'data/abc003/abc003001.wav') }),
-            I18n.translate('errors.checksum_mismatch', { c1: '260b3c2d20a1726de96671d29f73ba09d13b61ba',
-                                                         f1: File.join(source_directory, 'intermediate_files/abc002001.jpg'),
-                                                         c2: '260b3c2d20a7126de96671d29f73ba09d13b61ba',
-                                                         f2: File.join(target_directory, 'data/intermediate_files/abc002001.jpg') }),
-            I18n.translate('errors.checksum_mismatch', { c1: 'a08c4d5a76d1b8735587be6ffcba66a9baf475c4',
-                                                         f1: File.join(source_directory, 'targets/T001.tif'),
-                                                         c2: 'a08c4d5a76d1b8734487be6ffcba66a9baf475c4',
-                                                         f2: File.join(target_directory, 'data/dpc_targets/T001.tif') })
-          ]
-        }
-        describe 'files are copied' do
-          before { converter_args << true }
-          it_behaves_like 'a conversion to standard ingest format'
-        end
-        describe 'files are not copied' do
-          before { converter_args << false }
-          it_behaves_like 'a conversion to standard ingest format'
-        end
-      end
-      describe 'no mismatch' do
-        let(:checksum_file_template) { File.join('spec', 'fixtures', 'files', 'good-checksums-sha1.txt') }
+
+      describe 'no external checksum file' do
         let(:checksum_errors) { [] }
         describe 'files are copied' do
-          before { converter_args << true }
+          before { converter_args[:copy_files] = true }
           it_behaves_like 'a conversion to standard ingest format'
         end
         describe 'files are not copied' do
-          before { converter_args << false }
+          before { converter_args[:copy_files] = false }
           it_behaves_like 'a conversion to standard ingest format'
         end
       end
     end
 
-    describe 'no external checksum file' do
+    describe 'collection titles' do
       let(:checksum_errors) { [] }
-      before { converter_args << nil }
-      describe 'files are copied' do
-        before { converter_args << true }
-        it_behaves_like 'a conversion to standard ingest format'
-      end
-      describe 'files are not copied' do
-        before { converter_args << false }
+      describe 'collection title provided' do
+        let(:expected_metadata) { [
+            "path\tlocal_id\ttitle",
+            "\t\tTest Collection",
+            "abc001\tabc001\t",
+            "abc002\tabc002\t",
+            "abc003\tabc003\t",
+            "abc001/abc001001.tif\tabc001001\t",
+            "abc001/abc001002.tif\tabc001002\t",
+            "abc002/abc002001.tif\tabc002001\t",
+            "abc003/abc003001.wav\tabc003001\t",
+            "abc003/abc003002.wav\tabc003002\t",
+            "dpc_targets/T001.tif\tT001\t",
+            "dpc_targets/T002.tif\tT002\t"
+        ] }
+        let(:expected_manifest) do
+          File.readlines(File.join('spec', 'fixtures', 'files', 'manifest-sha1-collection-title.txt')).sort
+        end
+        before { converter_args[:collection_title] = 'Test Collection' }
         it_behaves_like 'a conversion to standard ingest format'
       end
     end
-
   end
 end

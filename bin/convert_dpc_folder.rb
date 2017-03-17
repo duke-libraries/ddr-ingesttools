@@ -5,9 +5,6 @@ require 'optparse'
 
 options = {}
 
-# Default options
-options[:copy] = false
-
 # Parse command line arguments
 parser = OptionParser.new do |opts|
   opts.banner = 'Usage: convert_dpc_folder.rb [options]'
@@ -29,9 +26,15 @@ parser = OptionParser.new do |opts|
     options[:checksums] = v
   end
 
-  opts.on('--[no-]copy', 'Copy files to target location instead of using a symlink') do |v|
-    options[:copy] = v
+  opts.on('--[no-]copy_files', 'Copy files to target location instead of using a symlink') do |v|
+    options[:copy_files] = v
   end
+
+  opts.on('--collection_title [TITLE]', 'Title for collection',
+          'required if intending to create a collection-creating Standard Ingest') do |v|
+    options[:collection_title] = v
+  end
+
 end
 
 begin
@@ -47,8 +50,7 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument
   exit(false)
 end
 
-converter_args = [ options[:source], options[:target], options[:item_id_length], options[:checksums], options[:copy] ]
-converter = Ddr::IngestTools::DpcFolderConverter::Converter.new(*converter_args)
+converter = Ddr::IngestTools::DpcFolderConverter::Converter.new(options)
 results = converter.call
 puts I18n.translate('errors.count', { count: results.errors.size })
 results.errors.each { |e| puts e }
