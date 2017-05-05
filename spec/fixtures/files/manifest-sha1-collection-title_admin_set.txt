@@ -7,4 +7,4 @@ a08c4d5a76d1b8734487be6ffcba66a9baf475c4 data/dpc_targets/T001.tif
 40f9993d06945544fa57af88f7c3e9102ecc69e3 data/dpc_targets/T002.tif
 49d77d27bf82ec3dafa1967490594883f5e8b432 data/intermediate_files/abc001001.jpg
 260b3c2d20a7126de96671d29f73ba09d13b61ba data/intermediate_files/abc002001.jpg
-8a7878863fd183436f50060343d3757747772d9f data/metadata.txt
+21f041cdd694f7755ed84b8cd2668214a43bad6c data/metadata.txt

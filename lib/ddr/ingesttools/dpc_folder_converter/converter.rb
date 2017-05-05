@@ -15,18 +15,21 @@ module Ddr::IngestTools::DpcFolderConverter
       Results = Struct.new(:file_map, :errors)
 
       attr_reader :source, :target, :data_dir, :item_id_length, :checksums, :copy_files, :collection_title,
-                  :metadata_headers
+                  :admin_set, :metadata_headers
       attr_accessor :errors, :file_map, :local_id_metadata, :results
 
-      def initialize(source:, target:, item_id_length:, checksums: nil, copy_files: false, collection_title: nil)
+      def initialize(source:, target:, item_id_length:, checksums: nil, copy_files: false, collection_title: nil,
+                      admin_set: nil)
         @source = source
         @target = target
         @item_id_length = item_id_length
         @checksums = checksums
         @copy_files = copy_files
         @collection_title = collection_title
+        @admin_set = admin_set
         @metadata_headers = [ 'path', 'local_id' ]
         @metadata_headers << 'title' unless collection_title.nil?
+        @metadata_headers << 'admin_set' unless admin_set.nil?
       end
 
       def call
@@ -104,12 +107,18 @@ module Ddr::IngestTools::DpcFolderConverter
 
       def output_metadata
         metadata_rows = []
-        if collection_title
-          metadata_rows << CSV::Row.new(metadata_headers, [ nil, nil, collection_title ])
+        case
+          when collection_title && admin_set
+            metadata_rows << CSV::Row.new(metadata_headers, [ nil, nil, collection_title, admin_set ])
+          when collection_title
+            metadata_rows << CSV::Row.new(metadata_headers, [ nil, nil, collection_title ])
+          when admin_set
+            metadata_rows << CSV::Row.new(metadata_headers, [ nil, nil, admin_set ])
         end
         local_id_metadata.each_pair do |k,v|
           row_elements = [ k, v ]
           row_elements << nil if collection_title
+          row_elements << nil if admin_set
           metadata_rows << CSV::Row.new(metadata_headers, row_elements)
         end
         File.open(File.join(data_dir, SIF_METADATA_FILENAME), 'w') do |file|

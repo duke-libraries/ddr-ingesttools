@@ -35,11 +35,16 @@ parser = OptionParser.new do |opts|
     options[:collection_title] = v
   end
 
+  opts.on('--admin_set [ADMIN_SET]', 'Admin set for collection',
+          'required if intending to create a collection-creating Standard Ingest') do |v|
+    options[:admin_set] = v
+  end
+
 end
 
 begin
   parser.parse!
-  mandatory = [ :source, :target, :item_id_length]
+  mandatory = [ :source, :target, :item_id_length ]
   missing = mandatory.select{ |param| options[param].nil? }
   unless missing.empty?
     raise OptionParser::MissingArgument.new(missing.join(', '))

@@ -169,29 +169,33 @@ module Ddr::IngestTools::DpcFolderConverter
       end
     end
 
-    describe 'collection titles' do
+    describe 'collection titles and admin sets' do
       let(:checksum_errors) { [] }
-      describe 'collection title provided' do
+      describe 'collection title and admin set provided' do
         let(:expected_metadata) { [
-            "path\tlocal_id\ttitle",
-            "\t\tTest Collection",
-            "abc001\tabc001\t",
-            "abc002\tabc002\t",
-            "abc003\tabc003\t",
-            "abc001/abc001001.tif\tabc001001\t",
-            "abc001/abc001002.tif\tabc001002\t",
-            "abc002/abc002001.tif\tabc002001\t",
-            "abc003/abc003001.wav\tabc003001\t",
-            "abc003/abc003002.wav\tabc003002\t",
-            "dpc_targets/T001.tif\tT001\t",
-            "dpc_targets/T002.tif\tT002\t"
+            "path\tlocal_id\ttitle\tadmin_set",
+            "\t\tTest Collection\tfoo",
+            "abc001\tabc001\t\t",
+            "abc002\tabc002\t\t",
+            "abc003\tabc003\t\t",
+            "abc001/abc001001.tif\tabc001001\t\t",
+            "abc001/abc001002.tif\tabc001002\t\t",
+            "abc002/abc002001.tif\tabc002001\t\t",
+            "abc003/abc003001.wav\tabc003001\t\t",
+            "abc003/abc003002.wav\tabc003002\t\t",
+            "dpc_targets/T001.tif\tT001\t\t",
+            "dpc_targets/T002.tif\tT002\t\t"
         ] }
         let(:expected_manifest) do
-          File.readlines(File.join('spec', 'fixtures', 'files', 'manifest-sha1-collection-title.txt')).sort
+          File.readlines(File.join('spec', 'fixtures', 'files', 'manifest-sha1-collection-title_admin_set.txt')).sort
         end
-        before { converter_args[:collection_title] = 'Test Collection' }
+        before do
+          converter_args[:collection_title] = 'Test Collection'
+          converter_args[:admin_set] = 'foo'
+        end
         it_behaves_like 'a conversion to standard ingest format'
       end
     end
+
   end
 end
