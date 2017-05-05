@@ -1,5 +1,5 @@
 module Ddr
   module IngestTools
-    VERSION = '0.2.1.post'
+    VERSION = '0.3.0.rc1'
   end
 end
