@@ -1,3 +1,4 @@
+require 'byebug'
 require 'ddr/ingesttools'
 require 'i18n'
 
