@@ -1,6 +1,5 @@
 require_relative 'ingesttools/version'
-require_relative 'ingesttools/dpc_folder_converter'
-require_relative 'ingesttools/checksum_file'
+require_relative 'ingesttools/manifest_ark_minter'
 
 require 'i18n'
 

@@ -1,7 +1,7 @@
 en:
-  errors:
-    count: "%{count} error(s)"
-    checksum_mismatch: |
-      ***** Checksum mismatch:
-              %{c1} %{f1}
-              %{c2} %{f2}
+  marquee: ==================================================
+  suite:
+    name: DDR Ingest Tools
+  manifest_ark_minter:
+    name: Manifest ARK Minter
+    use_default_config_file: 'Will use default configuration file: %{default_config_file}'
