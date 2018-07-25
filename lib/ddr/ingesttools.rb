@@ -1,4 +1,5 @@
 require_relative 'ingesttools/version'
+require_relative 'ingesttools/ddr_rdr_migrator'
 require_relative 'ingesttools/manifest_ark_minter'
 
 require 'i18n'
