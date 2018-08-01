@@ -1,0 +1,4 @@
+repo_id,object_type,permanent_id,local_id,content_type,original_filename
+changeme:666,Component,,,text/csv,data1.csv
+changeme:668,Component,,,text/csv,data2.csv
+changeme:669,Component,,,text/csv,data3.csv
