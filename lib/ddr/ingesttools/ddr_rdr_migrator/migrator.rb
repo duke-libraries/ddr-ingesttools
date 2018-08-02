@@ -16,6 +16,7 @@ module Ddr::IngestTools::DdrRdrMigrator
       sort_manifest
       rename_columns
       add_file_paths
+      remove_columns
       write_manifest
     end
 
@@ -40,6 +41,14 @@ module Ddr::IngestTools::DdrRdrMigrator
 
     def column_renamer
       ColumnRenamer.new(manifest: manifest)
+    end
+
+    def remove_columns
+      self.manifest = column_remover.call
+    end
+
+    def column_remover
+      ColumnRemover.new(logger: logger, manifest: manifest)
     end
 
     def file_path_adder
