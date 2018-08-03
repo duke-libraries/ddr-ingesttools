@@ -4,15 +4,11 @@ require 'tempfile'
 module Ddr::IngestTools::DdrRdrMigrator
   RSpec.describe Migrator do
 
-    subject do
-      described_class.new(base_path: base_path, files_subpath: files_subpath, metadata_file: metadata_file,
-                          outfile: outfile)
-    end
+    subject { described_class.new(files: files, metadata: metadata, outfile: outfile) }
 
-    let(:base_path) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'source') }
-    let(:files_subpath) { File.join('changeme-664', 'changeme-664-export-file') }
-    let(:metadata_file) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'source', 'changeme-664',
-                                    'changeme-664.csv') }
+    let(:files) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'source', 'changeme-664',
+                            'changeme-664-export-file') }
+    let(:metadata) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'source', 'changeme-664', 'changeme-664.csv') }
     let(:outdir) { Dir.mktmpdir }
     let(:outfile) { File.join(outdir, 'manifest.csv') }
     let(:expected_outfile) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'target', 'changeme-664',
