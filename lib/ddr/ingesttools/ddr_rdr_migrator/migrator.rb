@@ -16,6 +16,7 @@ module Ddr::IngestTools::DdrRdrMigrator
       sort_manifest
       rename_columns
       nest_works
+      map_licenses
       overwrite_metadata
       add_file_paths
       remove_columns
@@ -35,6 +36,10 @@ module Ddr::IngestTools::DdrRdrMigrator
 
     def add_file_paths
       file_path_adder.call
+    end
+
+    def map_licenses
+      license_mapper.call
     end
 
     def nest_works
@@ -63,6 +68,10 @@ module Ddr::IngestTools::DdrRdrMigrator
 
     def file_path_adder
       FilePathAdder.new(base_path: base_path, files_subpath: files_subpath, logger: logger, manifest: manifest)
+    end
+
+    def license_mapper
+      LicenseMapper.new(logger: logger, manifest: manifest)
     end
 
     def metadata_overwriter
