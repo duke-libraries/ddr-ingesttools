@@ -5,11 +5,11 @@ module Ddr::IngestTools::DdrRdrMigrator
   RSpec.describe FilePathAdder do
 
     subject do
-      described_class.new(base_path: base_path, files_subpath: files_subpath, manifest: manifest)
+      described_class.new(files: files, manifest: manifest)
     end
 
-    let(:base_path) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'source') }
-    let(:files_subpath) { File.join('changeme-664', 'changeme-664-export-file') }
+    let(:files) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'source', 'changeme-664',
+                            'changeme-664-export-file') }
     let(:manifest_file) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'manifests', 'sorted_manifest.csv') }
     let(:manifest) { CSV.read(manifest_file, headers: true) }
     let(:expected_manifest_file) { File.join('spec', 'fixtures', 'ddr_rdr_migrator', 'manifests',

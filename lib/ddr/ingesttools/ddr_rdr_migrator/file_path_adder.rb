@@ -1,26 +1,21 @@
 module Ddr::IngestTools::DdrRdrMigrator
   class FilePathAdder
 
-    attr_reader :base_path, :files_subpath, :logger, :metadata, :manifest
+    attr_reader :files, :logger, :manifest
 
-    def initialize(base_path:, files_subpath:, logger: nil, manifest:)
-      @base_path = base_path
-      @files_subpath = files_subpath
+    def initialize(files:, logger: nil, manifest:)
+      @files = files
       @logger = logger || Logger.new(STDOUT)
       @manifest = manifest
     end
 
     def call
-      scan_files(files_path)
+      scan_files(files)
       update_manifest
       manifest
     end
 
     private
-
-    def files_path
-      File.join(base_path, files_subpath)
-    end
 
     def item_files
       @item_files ||= {}
@@ -50,11 +45,11 @@ module Ddr::IngestTools::DdrRdrMigrator
     end
 
     def file_partial_path(file_loc)
-      file_loc.sub(files_path, '').sub(/^#{File::SEPARATOR}/, '')
+      file_loc.sub(files, '').sub(/^#{File::SEPARATOR}/, '')
     end
 
     def payload_file?(partial_path)
-      partial_path.start_with?(File.join('data', 'objects'))
+      partial_path.start_with?(File.join('data', 'objects')) && !File.basename(partial_path).start_with?('.')
     end
 
     def item_pid(partial_path)

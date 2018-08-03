@@ -1,14 +1,13 @@
 module Ddr::IngestTools::DdrRdrMigrator
   class Migrator
 
-    attr_reader :base_path, :files_subpath, :logger, :metadata_file, :outfile
+    attr_reader :files, :logger, :metadata, :outfile
     attr_writer :manifest
 
-    def initialize(base_path:, files_subpath:, logger: nil, metadata_file:, outfile:)
-      @base_path = base_path
-      @files_subpath = files_subpath
+    def initialize(files:, logger: nil, metadata:, outfile:)
+      @files = files
       @logger = logger || Logger.new(STDOUT)
-      @metadata_file = metadata_file
+      @metadata = metadata
       @outfile = outfile
     end
 
@@ -26,7 +25,7 @@ module Ddr::IngestTools::DdrRdrMigrator
     private
 
     def manifest
-      @manifest ||= as_csv_table(metadata_file)
+      @manifest ||= as_csv_table(metadata)
     end
 
     def sort_manifest
@@ -67,7 +66,7 @@ module Ddr::IngestTools::DdrRdrMigrator
     end
 
     def file_path_adder
-      FilePathAdder.new(base_path: base_path, files_subpath: files_subpath, logger: logger, manifest: manifest)
+      FilePathAdder.new(files: files, logger: logger, manifest: manifest)
     end
 
     def license_mapper
