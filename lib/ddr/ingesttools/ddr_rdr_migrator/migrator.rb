@@ -15,6 +15,7 @@ module Ddr::IngestTools::DdrRdrMigrator
     def call
       sort_manifest
       rename_columns
+      nest_works
       overwrite_metadata
       add_file_paths
       remove_columns
@@ -34,6 +35,10 @@ module Ddr::IngestTools::DdrRdrMigrator
 
     def add_file_paths
       file_path_adder.call
+    end
+
+    def nest_works
+      work_nester.call
     end
 
     def overwrite_metadata
@@ -62,6 +67,10 @@ module Ddr::IngestTools::DdrRdrMigrator
 
     def metadata_overwriter
       MetadataOverwriter.new(logger: logger, manifest: manifest)
+    end
+
+    def work_nester
+      WorkNester.new(logger: logger, manifest: manifest)
     end
 
     def write_manifest
