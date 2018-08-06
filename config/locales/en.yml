@@ -1,7 +1,7 @@
 en:
   marquee: ==================================================
   suite:
-    name: DDR Ingest Tools
+    name: "DDR Ingest Tools %{version}"
   ddr_rdr_migrator:
     name: DDR to RDR Migrator
   manifest_ark_minter:
