@@ -9,12 +9,12 @@ module Ddr::IngestTools::DdrRdrMigrator
     let(:ddr_headers) do
       [ 'pid', 'model', 'title', 'alternative', 'creator', 'contributor', 'affiliation', 'publisher', 'date',
         'temporal', 'description', 'subject', 'spatial', 'language', 'type', 'format', 'relation', 'rights',
-        'provenance', 'citation', 'permanent_id', 'doi' ]
+        'provenance', 'bibliographicCitation', 'permanent_id', 'doi' ]
     end
     let(:rdr_headers) do
       [ 'title', 'alternative', 'creator', 'contributor', 'affiliation', 'publisher', 'date', 'temporal',
         'description', 'subject', 'spatial', 'language', 'type', 'format', 'relation', 'rights', 'provenance',
-        'citation', 'permanent_id', 'doi' ]
+        'bibliographicCitation', 'permanent_id', 'doi' ]
     end
     let(:ddr_data) do
       [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v' ]

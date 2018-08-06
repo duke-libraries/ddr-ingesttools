@@ -12,7 +12,7 @@ module Ddr::IngestTools::DdrRdrMigrator
                    'type' => 'resource_type',
                    'relation' => 'related_url',
                    'rights' => 'license',
-                   'citation' => 'bibliographic_citation'
+                   'bibliographicCitation' => 'bibliographic_citation'
                  }
 
     def initialize(logger: nil, manifest:)

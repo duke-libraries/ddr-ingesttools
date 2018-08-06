@@ -11,7 +11,7 @@ module Ddr::IngestTools::DdrRdrMigrator
     let(:ddr_headers) do
       [ 'title', 'alternative', 'creator', 'contributor', 'affiliation', 'publisher', 'date', 'temporal',
         'description', 'subject', 'spatial', 'language', 'type', 'format', 'relation', 'rights',
-        'provenance', 'citation', 'permanent_id', 'doi' ]
+        'provenance', 'bibliographicCitation', 'permanent_id', 'doi' ]
     end
     let(:rdr_headers) do
       [ 'title', 'alternative', 'creator', 'contributor', 'affiliation', 'publisher', 'available', 'temporal',
