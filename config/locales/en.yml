@@ -2,6 +2,8 @@ en:
   marquee: ==================================================
   suite:
     name: DDR Ingest Tools
+  ddr_rdr_migrator:
+    name: DDR to RDR Migrator
   manifest_ark_minter:
     name: Manifest ARK Minter
     use_default_config_file: 'Will use default configuration file: %{default_config_file}'
