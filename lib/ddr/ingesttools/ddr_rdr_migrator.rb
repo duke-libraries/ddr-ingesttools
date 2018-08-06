@@ -7,8 +7,6 @@ require_relative 'ddr_rdr_migrator/metadata_overwriter'
 require_relative 'ddr_rdr_migrator/migrator'
 require_relative 'ddr_rdr_migrator/work_nester'
 
-require 'byebug'
-
 module Ddr::IngestTools
   module DdrRdrMigrator
 
