@@ -1,13 +1,14 @@
 module Ddr::IngestTools::DdrRdrMigrator
   class Migrator
 
-    attr_reader :files, :logger, :metadata, :outfile
+    attr_reader :checksum_file, :files, :logger, :metadata_file, :outfile
     attr_writer :manifest
 
-    def initialize(files:, logger: nil, metadata:, outfile:)
+    def initialize(checksum_file:, files:, logger: nil, metadata_file:, outfile:)
+      @checksum_file = checksum_file
       @files = files
       @logger = logger || Logger.new(STDOUT)
-      @metadata = metadata
+      @metadata_file = metadata_file
       @outfile = outfile
     end
 
@@ -25,7 +26,7 @@ module Ddr::IngestTools::DdrRdrMigrator
     private
 
     def manifest
-      @manifest ||= as_csv_table(metadata)
+      @manifest ||= as_csv_table(metadata_file)
     end
 
     def sort_manifest
@@ -66,7 +67,7 @@ module Ddr::IngestTools::DdrRdrMigrator
     end
 
     def file_path_adder
-      FilePathAdder.new(files: files, logger: logger, manifest: manifest)
+      FilePathAdder.new(checksum_file: checksum_file, files: files, logger: logger, manifest: manifest)
     end
 
     def license_mapper
