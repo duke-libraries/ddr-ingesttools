@@ -7,7 +7,7 @@ require 'optparse'
 options = {}
 
 puts I18n.t('marquee')
-puts I18n.t('suite.name')
+puts I18n.t('suite.name', version: Ddr::IngestTools::VERSION)
 puts I18n.t('manifest_ark_minter.name')
 puts I18n.t('marquee')
 

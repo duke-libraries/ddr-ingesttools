@@ -1,17 +1,21 @@
 module Ddr::IngestTools::DdrRdrMigrator
   class FilePathAdder
 
-    attr_reader :files, :logger, :manifest
+    attr_reader :checksum_file, :files, :import_checksums, :logger, :manifest
 
-    def initialize(files:, logger: nil, manifest:)
+    def initialize(checksum_file:, files:, logger: nil, manifest:)
+      @checksum_file = checksum_file
+      @import_checksums = {}
       @files = files
       @logger = logger || Logger.new(STDOUT)
       @manifest = manifest
     end
 
     def call
+      bag_checksums
       scan_files(files)
       update_manifest
+      write_checksums
       manifest
     end
 
@@ -35,7 +39,15 @@ module Ddr::IngestTools::DdrRdrMigrator
 
     def handle_file(file_loc)
       partial_path = file_partial_path(file_loc)
-      add_to_item_files(partial_path) if payload_file?(partial_path)
+      if payload_file?(partial_path)
+        add_to_item_files(partial_path)
+        add_to_checksums(partial_path)
+      end
+    end
+
+    def add_to_checksums(partial_path)
+      checksum = bag_checksums[partial_path]
+      import_checksums[File.join(files,  partial_path)] = checksum
     end
 
     def add_to_item_files(partial_path)
@@ -75,5 +87,26 @@ module Ddr::IngestTools::DdrRdrMigrator
       end
     end
 
+    def write_checksums
+      File.open(checksum_file, 'w') do |f|
+        import_checksums.each do |k,v|
+          f.puts "#{v}  #{k}"
+        end
+      end
+    end
+
+    def bag_checksums
+      @bag_checksums ||= load_bag_checksums
+    end
+
+    def load_bag_checksums
+      checksums = {}
+      bag_checksum_file = File.join(files, 'manifest-sha1.txt')
+      File.readlines(bag_checksum_file).each do |line|
+        sum, path = line.chomp.split
+        checksums[path] = sum
+      end
+      checksums
+    end
   end
 end
