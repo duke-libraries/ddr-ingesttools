@@ -16,7 +16,7 @@ parser = OptionParser.new do |opts|
   opts.banner = 'Usage: migrate_ddr_to_rdr.rb [options]'
 
   opts.on('-c', '--checksum_file CHECKSUM_FILE', 'File (with full path) to which checksum file should be written') do |v|
-    options[:checksum] = v
+    options[:checksum_file] = v
   end
 
   opts.on('-f', '--files FILE_PATH', 'Path to exported files') do |v|
@@ -24,7 +24,7 @@ parser = OptionParser.new do |opts|
   end
 
   opts.on('-m', '--metadata_file METADATA_FILE', 'DDR metadata export file (with full path)') do |v|
-    options[:metadata] = v
+    options[:metadata_file] = v
   end
 
   opts.on('-o', '--outfile OUTPUT_FILE', 'File (with full path) to which updated manifest file should be written') do |v|
